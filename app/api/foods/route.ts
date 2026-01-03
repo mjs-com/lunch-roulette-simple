@@ -2,29 +2,10 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getTagKeyForCategory } from '@/lib/utils';
 import { getOriginalTagValue } from '@/lib/tag-mapping';
 import { Food } from '@/types';
+import foodListData from '@/food-list.json';
 
-// 元のfood-list.jsonを使用（タグ値が元の長い名前のため）
-async function getFoods(): Promise<Food[]> {
-  try {
-    const fs = await import('fs');
-    const path = await import('path');
-    const filePath = path.join(process.cwd(), 'food-list.json');
-    
-    // ファイルの存在確認
-    if (!fs.existsSync(filePath)) {
-      throw new Error(`food-list.json not found at ${filePath}`);
-    }
-    
-    const fileContents = fs.readFileSync(filePath, 'utf8');
-    return JSON.parse(fileContents) as Food[];
-  } catch (error) {
-    console.error('Error reading food-list.json:', error);
-    throw error;
-  }
-}
-
-// メモリキャッシュ
-let cachedFoods: Food[] | null = null;
+// food-list.jsonを直接インポート（ビルド時にバンドルに含まれる）
+const foods: Food[] = foodListData as Food[];
 
 export async function GET(request: NextRequest) {
   try {
@@ -50,27 +31,11 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    // キャッシュからデータを取得
-    if (!cachedFoods) {
-      try {
-        cachedFoods = await getFoods();
-      } catch (error) {
-        console.error('Failed to load foods:', error);
-        return NextResponse.json(
-          { 
-            error: 'Failed to load food data', 
-            details: error instanceof Error ? error.message : 'Unknown error' 
-          },
-          { status: 500 }
-        );
-      }
-    }
-
     // 短縮名を元のタグ値に変換
     const originalTagValue = getOriginalTagValue(categoryIdNum, mediumCategory);
 
     // フィルタリング
-    const filteredFoods = cachedFoods.filter((food) => food.tags[tagKey] === originalTagValue);
+    const filteredFoods = foods.filter((food) => food.tags[tagKey] === originalTagValue);
 
     if (filteredFoods.length === 0) {
       return NextResponse.json(
