@@ -10,6 +10,7 @@ interface RouletteProps {
   onResult: (mediumCategory: string) => void;
   onBack: () => void;
   isLoading?: boolean;
+  error?: string | null;
 }
 
 // セグメントの色（パステルカラー）
@@ -26,7 +27,7 @@ const segmentColors = [
   '#CDB4DB', // lavender
 ];
 
-export default function Roulette({ category, onResult, onBack, isLoading = false }: RouletteProps) {
+export default function Roulette({ category, onResult, onBack, isLoading = false, error = null }: RouletteProps) {
   const [isSpinning, setIsSpinning] = useState(false);
   const [rotation, setRotation] = useState(0);
   const [showResult, setShowResult] = useState(false);
@@ -243,6 +244,24 @@ export default function Roulette({ category, onResult, onBack, isLoading = false
             )}
           </motion.button>
         </div>
+
+        {/* エラーメッセージ */}
+        <AnimatePresence>
+          {error && (
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
+              transition={{ duration: 0.3 }}
+              className="mt-6 text-center"
+            >
+              <div className="inline-block bg-red-50 border border-red-200 text-red-700 px-6 py-3 rounded-xl">
+                <p className="text-sm font-medium">エラーが発生しました</p>
+                <p className="text-xs mt-1">{error}</p>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
 
         {/* 結果表示 */}
         <AnimatePresence>
